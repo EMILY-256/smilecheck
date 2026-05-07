@@ -6,10 +6,14 @@ plugins {
 }
 
 android {
+    
     namespace = "com.example.smilecheck"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
-
+aaptOptions {
+    noCompress.add("tflite")
+}
+    
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
