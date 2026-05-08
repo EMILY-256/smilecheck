@@ -10,12 +10,12 @@ class AiService {
   static const int _inputSize = 224;
 
   Future<void> loadModel() async {
-    // Copy model from assets to local storage to avoid compression issues
     final modelFile = await _getModelFile('dental_caries_detection.tflite');
     _interpreter = await Interpreter.fromFile(modelFile);
 
     final labelsRaw = await rootBundle.loadString('assets/models/labels.txt');
     _labels = labelsRaw.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    if (_labels.length != 2) _labels = ['Healthy', 'Caries'];
   }
 
   Future<File> _getModelFile(String assetPath) async {
@@ -38,9 +38,7 @@ class AiService {
   Future<Map<String, dynamic>> predictFromImage(img.Image image) async {
     final resized =
         img.copyResize(image, width: _inputSize, height: _inputSize);
-    final input = _imageToTensorMobileNetV2(resized);
-
-    // Output shape: [1, 1] (binary classification)
+    final input = _preprocessImage(resized);
     final output = List.filled(1 * 1, 0.0).reshape([1, 1]);
     _interpreter.run(input, output);
 
@@ -48,13 +46,12 @@ class AiService {
     String predictedClass;
     double confidence;
     if (cariesProb >= 0.5) {
-      predictedClass = _labels.length > 1 ? _labels[1] : "Caries";
+      predictedClass = _labels.length > 1 ? _labels[1] : 'Caries';
       confidence = cariesProb;
     } else {
-      predictedClass = _labels.isNotEmpty ? _labels[0] : "Healthy";
+      predictedClass = _labels.isNotEmpty ? _labels[0] : 'Healthy';
       confidence = 1 - cariesProb;
     }
-
     return {
       'label': predictedClass,
       'confidence': confidence,
@@ -63,23 +60,21 @@ class AiService {
     };
   }
 
-  List<List<List<List<double>>>> _imageToTensorMobileNetV2(img.Image image) {
+  List<List<List<double>>> _preprocessImage(img.Image image) {
     final tensor = List.generate(
       _inputSize,
-      (_) => List.generate(
-        _inputSize,
-        (_) => List.generate(3, (_) => 0.0),
-      ),
+      (_) => List.generate(_inputSize, (_) => List.filled(3, 0.0)),
     );
     for (int y = 0; y < _inputSize; y++) {
       for (int x = 0; x < _inputSize; x++) {
         final pixel = image.getPixel(x, y);
-        tensor[y][x][0] = (pixel.r.toDouble() / 127.5) - 1.0;
-        tensor[y][x][1] = (pixel.g.toDouble() / 127.5) - 1.0;
-        tensor[y][x][2] = (pixel.b.toDouble() / 127.5) - 1.0;
+        // Normalize to [-1, 1] as in your FastAPI: image/127.5 - 1
+        tensor[y][x][0] = (pixel.r / 127.5) - 1.0;
+        tensor[y][x][1] = (pixel.g / 127.5) - 1.0;
+        tensor[y][x][2] = (pixel.b / 127.5) - 1.0;
       }
     }
-    return [tensor];
+    return tensor;
   }
 
   void dispose() {

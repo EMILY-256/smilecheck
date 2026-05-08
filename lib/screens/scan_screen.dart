@@ -17,7 +17,6 @@ class _ScanScreenState extends State<ScanScreen> {
   bool _isAnalyzing = false;
   String? _errorMessage;
 
-  // Dropdown selection
   String? _selectedTooth;
   final List<String> _toothOptions = [
     'Upper Right Molar',
@@ -47,24 +46,18 @@ class _ScanScreenState extends State<ScanScreen> {
         _errorMessage = null;
       });
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to pick image: $e';
-      });
+      setState(() => _errorMessage = 'Failed to pick image: $e');
     }
   }
 
   Future<void> _analyzeImage() async {
     if (_selectedImage == null) {
-      setState(() {
-        _errorMessage = 'Please take a photo or select an image first';
-      });
+      setState(
+          () => _errorMessage = 'Please take a photo or select an image first');
       return;
     }
-
     if (_selectedTooth == null) {
-      setState(() {
-        _errorMessage = 'Please select a tooth from the list';
-      });
+      setState(() => _errorMessage = 'Please select a tooth from the list');
       return;
     }
 
@@ -75,15 +68,15 @@ class _ScanScreenState extends State<ScanScreen> {
 
     try {
       final scanProvider = Provider.of<ScanProvider>(context, listen: false);
-      final scan = await scanProvider.analyzeImage(_selectedImage!, _selectedTooth!);
-
+      final scan =
+          await scanProvider.analyzeImage(_selectedImage!, _selectedTooth!);
       if (scan != null && mounted) {
-        Navigator.pop(context); // Return to home screen
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Scan complete: ${scan.severity.toUpperCase()}'),
-            backgroundColor: scan.severity == 'healthy' ? Colors.green : Colors.orange,
-            behavior: SnackBarBehavior.floating,
+            backgroundColor:
+                scan.severity == 'healthy' ? Colors.green : Colors.orange,
           ),
         );
       } else if (mounted) {
@@ -103,16 +96,12 @@ class _ScanScreenState extends State<ScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('New Dental Scan'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-      ),
+      appBar: AppBar(title: const Text('New Dental Scan')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Tooth selection dropdown
             DropdownButtonFormField<String>(
               value: _selectedTooth,
               hint: const Text('Select a tooth'),
@@ -121,122 +110,95 @@ class _ScanScreenState extends State<ScanScreen> {
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.medical_services),
               ),
-              items: _toothOptions.map((tooth) {
-                return DropdownMenuItem<String>(
-                  value: tooth,
-                  child: Text(tooth),
-                );
-              }).toList(),
-              onChanged: _isAnalyzing ? null : (value) {
-                setState(() {
-                  _selectedTooth = value;
-                  _errorMessage = null;
-                });
-              },
+              items: _toothOptions
+                  .map((tooth) =>
+                      DropdownMenuItem(value: tooth, child: Text(tooth)))
+                  .toList(),
+              onTap: () => FocusScope.of(context).unfocus(),
+              onChanged: _isAnalyzing
+                  ? null
+                  : (value) => setState(() => _selectedTooth = value),
             ),
             const SizedBox(height: 24),
-
-            // Image picker buttons
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _isAnalyzing ? null : () => _pickImage(ImageSource.camera),
+                    onPressed: _isAnalyzing
+                        ? null
+                        : () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt),
                     label: const Text('Take Photo'),
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _isAnalyzing ? null : () => _pickImage(ImageSource.gallery),
+                    onPressed: _isAnalyzing
+                        ? null
+                        : () => _pickImage(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library),
                     label: const Text('Upload from Gallery'),
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-
-            // Image preview
-            if (_selectedImage != null) ...[
+            if (_selectedImage != null)
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12)),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    _selectedImage!,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.file(_selectedImage!,
+                      height: 200, width: double.infinity, fit: BoxFit.cover),
                 ),
               ),
+            if (_errorMessage != null) ...[
               const SizedBox(height: 16),
-            ],
-
-            // Error message
-            if (_errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.shade200),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.red.shade700),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _errorMessage!,
-                        style: TextStyle(color: Colors.red.shade700),
-                      ),
-                    ),
-                  ],
-                ),
+                color: Colors.red.shade50,
+                child: Text(_errorMessage!,
+                    style: TextStyle(color: Colors.red.shade700)),
               ),
-
+            ],
             const SizedBox(height: 24),
-
-            // Analyze button
-            SizedBox(
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _isAnalyzing ? null : _analyzeImage,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+SizedBox(
+  height: 52,
+  child: ElevatedButton(
+    onPressed: _isAnalyzing ? null : _analyzeImage,
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      foregroundColor: Colors.white, // ensures text is visible
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    child: _isAnalyzing
+        ? const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
                 ),
-                child: _isAnalyzing
-                    ? const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Text('Analyzing...'),
-                        ],
-                      )
-                    : const Text(
-                        'Analyze',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
               ),
-            ),
+              SizedBox(width: 12),
+              Text(
+                'Analyzing...',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          )
+        : const Text(
+            'Analyze',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+  ),
+)
           ],
         ),
       ),

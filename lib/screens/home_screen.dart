@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/scan_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/scan_provider.dart';
 import '../widgets/scan_card.dart';
 import 'scan_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
+import '../models/scan_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

@@ -1,16 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../models/scan_model.dart';
 
 class ScanCard extends StatelessWidget {
   final Scan scan;
   final VoidCallback? onTap;
 
-  const ScanCard({super.key, required this.scan, this.onTap});
+  const ScanCard({Key? key, required this.scan, this.onTap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     Color severityColor;
     switch (scan.severity) {
       case 'severe':
@@ -20,17 +19,16 @@ class ScanCard extends StatelessWidget {
         severityColor = Colors.orange;
         break;
       case 'mild':
-        severityColor = Colors.yellow.shade700;
+        severityColor = Colors.yellow;
         break;
       default:
         severityColor = Colors.green;
     }
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -39,10 +37,12 @@ class ScanCard extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
+                  image: DecorationImage(
+                    image: FileImage(File(scan.imagePath)),
+                    fit: BoxFit.cover,
+                  ),
                 ),
-                child: const Icon(Icons.image, size: 30),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -52,32 +52,39 @@ class ScanCard extends StatelessWidget {
                     Text(
                       scan.toothName,
                       style: const TextStyle(
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Text(
-                      DateFormat('dd/MM/yyyy HH:mm').format(scan.date),
-                      style: theme.textTheme.bodySmall,
+                      '${scan.date.day}/${scan.date.month}/${scan.date.year}',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: severityColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${scan.severity.toUpperCase()} - ${scan.cariesPercentage.toStringAsFixed(1)}%',
+                          style: TextStyle(
+                            color: severityColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: severityColor.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  scan.severity,
-                  style: TextStyle(
-                    color: severityColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
+              if (onTap != null) const Icon(Icons.arrow_forward_ios, size: 16),
             ],
           ),
         ),

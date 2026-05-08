@@ -7,11 +7,14 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smilecheck/main.dart';
+import 'package:smilecheck/services/ai_service.dart';
 
 void main() {
   testWidgets('App starts successfully', (WidgetTester tester) async {
+    // Create a dummy AiService for testing
+    final aiService = AiService();
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(MyApp(aiService: aiService));
 
     // Verify the app is running without crashing
     expect(find.byType(MyApp), findsOneWidget);

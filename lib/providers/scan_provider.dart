@@ -1,5 +1,3 @@
-// lib/providers/scan_provider.dart
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -8,11 +6,13 @@ import '../services/ai_service.dart';
 import '../services/database_helper.dart';
 
 class ScanProvider extends ChangeNotifier {
-  final AiService _ai = AiService();
+  final AiService _ai;
   final DatabaseHelper _db = DatabaseHelper();
   List<Scan> _scans = [];
   bool _isAnalyzing = false;
   String? _analysisError;
+
+  ScanProvider({AiService? aiService}) : _ai = aiService ?? AiService();
 
   List<Scan> get scans => _scans;
   bool get isAnalyzing => _isAnalyzing;
@@ -29,15 +29,11 @@ class ScanProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Ensure model is loaded (call this once at app start too)
-      await _ai.loadModel();
-
       final prediction = await _ai.predictFromFile(image);
       final predictedClass = prediction['label'];
       final confidence = prediction['confidence'];
       final cariesProb = prediction['caries_probability'];
 
-      // Convert to your severity and issues
       String severity;
       double cariesPercentage;
       List<String> issues;
@@ -58,13 +54,8 @@ class ScanProvider extends ChangeNotifier {
         severity = 'healthy';
         cariesPercentage = (1 - cariesProb) * 100;
         issues = ['No caries detected'];
-        // Optional: reject very low confidence as "not a tooth"
-        if (confidence < 0.5) {
-          throw Exception('Image does not appear to be a clear tooth photo');
-        }
       }
 
-      // Save image permanently
       final appDir = await getApplicationDocumentsDirectory();
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
       final savedImage = File('${appDir.path}/$fileName');
