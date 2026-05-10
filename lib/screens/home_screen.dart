@@ -22,7 +22,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ScanProvider>(context, listen: false).loadScans();
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final user = auth.user;
+      if (user != null) {
+        Provider.of<ScanProvider>(context, listen: false)
+            .loadScansForUser(user.id);
+      }
     });
   }
 
@@ -32,11 +37,29 @@ class _HomeScreenState extends State<HomeScreen> {
     final scanProvider = Provider.of<ScanProvider>(context);
     final scans = scanProvider.scans;
     final totalScans = scans.length;
-    final issuesFound = scans.where((s) => s.severity != 'healthy').length;
+    final issuesFound = scans.where((s) => s.resultType == 'caries').length;
     final lastScan = scans.isNotEmpty ? scans.first.date : null;
     final healthScore = _calculateHealthScore(scans);
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/images/logo.jpeg',
+              height: 34,
+              errorBuilder: (_, __, ___) => const Icon(Icons.health_and_safety),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'SmileCheck',
+              style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.4),
+            ),
+          ],
+        ),
+        elevation: 0,
+      ),
       body: IndexedStack(
         index: _selectedIndex,
         children: [
@@ -183,19 +206,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   double _calculateHealthScore(List<Scan> scans) {
-    if (scans.isEmpty) return 100;
+    final diagnosticScans =
+        scans.where((scan) => scan.resultType != 'unsuitable').toList();
+    if (diagnosticScans.isEmpty) return 100;
     double totalCaries = 0;
-    for (var scan in scans) {
+    for (var scan in diagnosticScans) {
       if (scan.severity == 'severe')
         totalCaries += 80;
       else if (scan.severity == 'moderate')
         totalCaries += 50;
-      else if (scan.severity == 'mild')
-        totalCaries += 20;
-      else
-        totalCaries += 5;
+      else if (scan.severity == 'mild') totalCaries += 20;
     }
-    double avgCaries = totalCaries / scans.length;
+    double avgCaries = totalCaries / diagnosticScans.length;
     double health = 100 - avgCaries;
     return health.clamp(0, 100);
   }
@@ -216,8 +238,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text('Date: ${scan.date.toLocal()}'),
-            Text('Severity: ${scan.severity.toUpperCase()}'),
-            Text('Caries %: ${scan.cariesPercentage.toStringAsFixed(1)}%'),
+            Text('Result: ${_resultLabel(scan)}'),
+            if (scan.severity != null)
+              Text('Severity: ${scan.severity!.toUpperCase()}'),
+            Text('Confidence: ${scan.confidence.toStringAsFixed(1)}%'),
+            if (scan.cariesPercentage != null && scan.resultType == 'caries')
+              Text('Caries %: ${scan.cariesPercentage!.toStringAsFixed(1)}%'),
             const SizedBox(height: 12),
             const Text('Issues:',
                 style: TextStyle(fontWeight: FontWeight.bold)),
@@ -243,6 +269,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  String _resultLabel(Scan scan) {
+    switch (scan.resultType) {
+      case 'unsuitable':
+        return 'Image unsuitable';
+      case 'caries':
+        return 'Possible caries';
+      default:
+        return 'Healthy';
+    }
   }
 
   void _shareScan(Scan scan) async {

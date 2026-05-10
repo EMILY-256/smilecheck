@@ -10,20 +10,8 @@ class ScanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color severityColor;
-    switch (scan.severity) {
-      case 'severe':
-        severityColor = Colors.red;
-        break;
-      case 'moderate':
-        severityColor = Colors.orange;
-        break;
-      case 'mild':
-        severityColor = Colors.yellow;
-        break;
-      default:
-        severityColor = Colors.green;
-    }
+    final statusColor = _statusColor(scan);
+    final statusText = _statusText(scan);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -67,15 +55,15 @@ class ScanCard extends StatelessWidget {
                           width: 12,
                           height: 12,
                           decoration: BoxDecoration(
-                            color: severityColor,
+                            color: statusColor,
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '${scan.severity.toUpperCase()} - ${scan.cariesPercentage.toStringAsFixed(1)}%',
+                          statusText,
                           style: TextStyle(
-                            color: severityColor,
+                            color: statusColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -90,5 +78,34 @@ class ScanCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _statusColor(Scan scan) {
+    switch (scan.resultType) {
+      case 'unsuitable':
+        return Colors.blueGrey;
+      case 'caries':
+        switch (scan.severity) {
+          case 'severe':
+            return Colors.red;
+          case 'moderate':
+            return Colors.orange;
+          default:
+            return Colors.amber;
+        }
+      default:
+        return Colors.green;
+    }
+  }
+
+  String _statusText(Scan scan) {
+    switch (scan.resultType) {
+      case 'unsuitable':
+        return 'UNSUITABLE - ${scan.confidence.toStringAsFixed(1)}%';
+      case 'caries':
+        return '${(scan.severity ?? 'caries').toUpperCase()} - ${scan.confidence.toStringAsFixed(1)}%';
+      default:
+        return 'HEALTHY - ${scan.confidence.toStringAsFixed(1)}%';
+    }
   }
 }

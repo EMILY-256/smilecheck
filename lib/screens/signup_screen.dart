@@ -38,11 +38,14 @@ class _SignupScreenState extends State<SignupScreen> {
     );
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created!'), backgroundColor: Colors.green),
+        const SnackBar(
+            content: Text('Account created!'), backgroundColor: Colors.green),
       );
     } else if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error ?? 'Signup failed'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text(auth.error ?? 'Signup failed'),
+            backgroundColor: Colors.red),
       );
     }
   }
@@ -51,7 +54,20 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      appBar: AppBar(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/logo.jpeg',
+              height: 30,
+              errorBuilder: (_, __, ___) => const Icon(Icons.health_and_safety),
+            ),
+            const SizedBox(width: 8),
+            const Text('Create Account'),
+          ],
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -60,15 +76,19 @@ class _SignupScreenState extends State<SignupScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Full Name', prefixIcon: Icon(Icons.person)),
-                validator: (v) => v == null || v.isEmpty ? 'Name required' : null,
+                decoration: const InputDecoration(
+                    labelText: 'Full Name', prefixIcon: Icon(Icons.person)),
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Name required' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
-                validator: (v) => v == null || v.isEmpty ? 'Email required' : null,
+                decoration: const InputDecoration(
+                    labelText: 'Email', prefixIcon: Icon(Icons.email)),
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Email required' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -78,11 +98,15 @@ class _SignupScreenState extends State<SignupScreen> {
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    icon: Icon(_obscurePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
-                validator: (v) => v == null || v.length < 6 ? 'Min 6 characters' : null,
+                validator: (v) =>
+                    v == null || v.length < 6 ? 'Min 6 characters' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -92,14 +116,22 @@ class _SignupScreenState extends State<SignupScreen> {
                   labelText: 'Confirm Password',
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                    icon: Icon(_obscureConfirm
+                        ? Icons.visibility_off
+                        : Icons.visibility),
+                    onPressed: () =>
+                        setState(() => _obscureConfirm = !_obscureConfirm),
                   ),
                 ),
-                validator: (v) => v != _passwordController.text ? 'Passwords do not match' : null,
+                validator: (v) => v != _passwordController.text
+                    ? 'Passwords do not match'
+                    : null,
               ),
               const SizedBox(height: 24),
-              LoadingButton(onPressed: _signup, isLoading: auth.isLoading, text: 'Sign Up'),
+              LoadingButton(
+                  onPressed: _signup,
+                  isLoading: auth.isLoading,
+                  text: 'Sign Up'),
             ],
           ),
         ),
