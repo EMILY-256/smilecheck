@@ -70,9 +70,9 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
-                // Good morning + name
+                // Welcome + name
                 Text(
-                  'Good morning, ${auth.user?.name ?? "User"}',
+                  'Welcome, ${auth.user?.name ?? "User"}',
                   style: const TextStyle(
                       fontSize: 24, fontWeight: FontWeight.bold),
                 ),
